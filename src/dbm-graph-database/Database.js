@@ -321,6 +321,14 @@ export default class Database extends Dbm.core.BaseObject {
         return null;
     }
 
+    async getUrlsForNextId(aUrl) {
+        let query = "SELECT url as url FROM Urls WHERE url LIKE " + this.connection.escape(aUrl + "-%");
+        
+        let result = await this.connection.query(query);
+
+        return result[0].map((aItem) => {return aItem.url});
+    }
+
     async updateUrl(aId, aUrl) {
         let url = this.connection.escape(aUrl);
         let query = "INSERT INTO Urls (object, url) VALUES (" + aId + ", " + url + ") ON DUPLICATE KEY UPDATE url = " + url +";";
@@ -333,6 +341,21 @@ export default class Database extends Dbm.core.BaseObject {
         }
 
         return true;
+    }
+
+    async getUrl(aId) {
+    
+        let query = "SELECT url as url FROM Urls WHERE object = " + aId + " LIMIT 1";
+
+        console.log(query);
+        let result = await this.connection.query(query);
+
+        if(result[0].length) {
+            return result[0][0].url;
+        }
+
+        return null;
+
     }
 
     async createUser() {

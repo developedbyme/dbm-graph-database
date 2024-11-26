@@ -94,8 +94,9 @@ export default class DatabaseObject {
     }
 
     async getUrl() {
-        //METODO:
-        return null;
+        let url = await this._database.getUrl(this.id);
+
+        return url;
     }
 
     _idFromPostOrId(aIdOrPost) {
