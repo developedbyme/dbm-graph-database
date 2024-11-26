@@ -114,7 +114,7 @@ export default class User extends DatabaseObject {
         let userId = this.id;
 		let token = crypto.randomBytes(32).toString('hex');
 
-        let expiryLength = 3600;
+        let expiryLength = 24*3600;
 
         let expiryDate =(new Date((new Date()).valueOf()+expiryLength*1000));
         let expiry = expiryDate.toISOString().split("T").join(" ").substring(0, 19);
