@@ -189,6 +189,32 @@ export default class Database extends Dbm.core.BaseObject {
 
         return returnArray;
     }
+	
+	async getObjectsOfType(aType, aVisibility = "public") {
+		
+		let objectTypeId = await this.getObjectType(aType);
+		
+		let query = "SELECT Objects.id as id from Objects INNER JOIN ObjectTypesLink ON Objects.id = ObjectTypesLink.id WHERE ObjectTypesLink.type = " + objectTypeId;
+		
+		if(aVisibility !== "*") {
+			let visibilityId = await this.getVisibilityType(aVisibility);
+			query += " AND Objects.visibility = " + visibilityId; 
+		}
+		
+		let result = await this.connection.query(query);
+		
+        let currentArray = result[0];
+        let currentArrayLength = currentArray.length;
+
+        let returnArray = new Array(currentArrayLength);
+        for(let i = 0; i < currentArrayLength; i++) {
+            returnArray[i] = this.getObject(currentArray[i].id);
+        }
+		
+		return returnArray;
+		
+		
+	}
 
     async getObjectIdentifier(aObjectId) {
         let query = "SELECT identifier as identifier FROM Identifiers WHERE object = " + this.connection.escape(aObjectId) + " LIMIT 1";
