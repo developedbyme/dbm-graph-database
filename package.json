@@ -11,7 +11,7 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "dbm": "^1.0.0",
+    "dbm": "^1.0.3",
     "mysql2": "^3.11.3"
   }
 }
