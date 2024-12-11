@@ -12,7 +12,6 @@ export default class User extends DatabaseObject {
     async setUsername(aUsername) {
         
         let query = "UPDATE Users SET username = " + this._database.connection.escape(aUsername) + " WHERE object = " + this.id;
-        console.log(query);
 		let result = await this._database.connection.query(query);
     }
 
@@ -71,7 +70,6 @@ export default class User extends DatabaseObject {
         if(!this._personalSalt) {
             let query = "SELECT salt as salt FROM Users WHERE object = " + this.id + " LIMIT 1";
 
-            console.log(query);
             let result = await this._database.connection.query(query);
     
             if(result[0].length) {
@@ -151,7 +149,7 @@ export default class User extends DatabaseObject {
                 return false;
             }
 
-            console.log(expiry.toISOString().split("T").join(" ").substring(0, 19), row.expiry);
+            //console.log(expiry.toISOString().split("T").join(" ").substring(0, 19), row.expiry);
             if(expiry.toISOString().split("T").join(" ").substring(0, 19) !== row.expiry) {
                 return false;
             }
@@ -191,7 +189,7 @@ export default class User extends DatabaseObject {
     }
 
     async verifySignedSessionToken(aSignedToken) {
-        console.log("verifySignedSessionToken");
+        //console.log("verifySignedSessionToken");
 
         let [sessionId, userId, expiry, token, signature] = aSignedToken.split(":");
 
@@ -223,7 +221,7 @@ export default class User extends DatabaseObject {
             let storedSessionId = await this._generatePublicSesssionId(sessionId, (new Date(row.expiry + "Z")).valueOf(), row.token);
             let storedFullToken = await this.generateSignedSessionToken(sessionId, expiry.valueOf(), token, storedSessionId);
 
-            console.log(storedSessionId, storedFullToken, aSignedToken);
+            //console.log(storedSessionId, storedFullToken, aSignedToken);
             if(storedFullToken === aSignedToken) {
                 return true;
             }

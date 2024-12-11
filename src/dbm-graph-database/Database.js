@@ -219,7 +219,7 @@ export default class Database extends Dbm.core.BaseObject {
     async getObjectIdentifier(aObjectId) {
         let query = "SELECT identifier as identifier FROM Identifiers WHERE object = " + this.connection.escape(aObjectId) + " LIMIT 1";
 
-        console.log(query);
+        //console.log(query);
         let result = await this.connection.query(query);
 
         if(result[0].length) {
@@ -337,7 +337,7 @@ export default class Database extends Dbm.core.BaseObject {
     async getObjectByUrl(aUrl) {
         let query = "SELECT object as id FROM Urls WHERE url = " + this.connection.escape(aUrl) + " LIMIT 1";
 
-        console.log(query);
+        //console.log(query);
         let result = await this.connection.query(query);
 
         if(result[0].length) {
@@ -373,7 +373,7 @@ export default class Database extends Dbm.core.BaseObject {
     
         let query = "SELECT url as url FROM Urls WHERE object = " + aId + " LIMIT 1";
 
-        console.log(query);
+        //console.log(query);
         let result = await this.connection.query(query);
 
         if(result[0].length) {
