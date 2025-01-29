@@ -112,6 +112,10 @@ export default class Database extends Dbm.core.BaseObject {
 		
 		let id = await this.createId(typeId);
 
+        if(typeof(aVisibility) === "string") {
+            aVisibility = await this.getVisibilityType(aVisibility);
+        }
+
 		let query = "INSERT INTO " + table + " (id, visibility) VALUES (" + id + ", " + aVisibility + ")";
 		let result = await this.connection.query(query);
 
