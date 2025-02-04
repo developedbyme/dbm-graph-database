@@ -12,6 +12,6 @@
   "description": "",
   "dependencies": {
     "dbm": "^1.1.0",
-    "mysql2": "^3.11.3"
+    "mysql2": "^3.12.0"
   }
 }
