@@ -19,6 +19,10 @@ export default class DatabaseObject {
         return await this._database.getObjectIdentifier(this.id);
     }
 
+    async setIdentifier(aIdentifier) {
+        await this._database.setObjectIdentifier(this.id, aIdentifier);
+    }
+
     async getFields() {
         return await this._database.getFields(this.id);
     }

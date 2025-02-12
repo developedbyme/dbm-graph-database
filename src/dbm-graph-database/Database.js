@@ -234,6 +234,17 @@ export default class Database extends Dbm.core.BaseObject {
         
     }
 
+    async setObjectIdentifier(aId, aIdentifier) {
+        
+        let query = "INSERT INTO Identifiers (object, identifier) VALUES (" + aId + ", " + this.connection.escape(aIdentifier) + ")";
+
+        console.log(query);
+        let result = await this.connection.query(query);
+
+        return null;
+        
+    }
+
     async runObjectRelationQuery(aFromIds, aDirection, aType, aObjectType = "*", aTime = "NOW()") {
         //console.log("runObjectRelationQuery");
         
