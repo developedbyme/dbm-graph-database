@@ -134,7 +134,7 @@ export default class Database extends Dbm.core.BaseObject {
 		let table = "Relations";
 		
 		let id = await this.createId(typeId);
-		let relationTypeId = await this.getRelationType (aType);
+		let relationTypeId = await this.getRelationType(aType);
 
         if(aStartAt === null ) {
             aStartAt = "NULL";
@@ -155,6 +155,28 @@ export default class Database extends Dbm.core.BaseObject {
 
 		return id;
 	}
+
+    async getTypeObject(aObjectType, aIdentifier, aDefaultVisibility = "public") {
+        let objectTypeId = this.getObjectType(aObjectType);
+
+        let query = "SELECT id as id FROM Objects INNER JOIN Identifiers ON Objects.id = Identifiers.object INNER JOIN ObjectTypesLink ON Objects.id = ObjectTypesLink.id WHERE ObjectTypesLink.type = " + objectTypeId + " AND Identifiers.identifier = " + this.connection.escape(aIdentifier) + " LIMIT 1";
+
+		let result = await this.connection.query(query);
+		let rows = result[0];
+
+		if(rows.length) {
+			return this.getObject(rows[0].id);
+		}
+		else {
+            let object = await this.createObject(aDefaultVisibility, [aObjectType]);
+            await object.setIdentifier(aIdentifier);
+            await object.updateField("name", aIdentifier);
+
+            return object;
+        }
+        
+        
+    }
 
     getObject(aId) {
         let newObject = new DatabaseObject();
