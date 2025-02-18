@@ -91,6 +91,54 @@ export default class DatabaseObject {
         return this;
     }
 
+    async replaceOutgoingRelation(aIdOrPost, aType, aObjectType, aEndAt = null) {
+        let id = this._idFromPostOrId(aIdOrPost);
+
+        let hasRelation = false;
+        let objects = await this._database.getRelations([this.id], "out", aType, aObjectType);
+        if(objects.length) {
+            let currentArray = objects;
+            let currentArrayLength = currentArray.length;
+            for(let i = 0; i < currentArrayLength; i++) {
+                let relatedObject = currentArray[i];
+                if(relatedObject.id === id && relatedObject.endAt === aEndAt && !hasRelation) {
+                    hasRelation = true;
+                }
+                else {
+                    await this._database.endRelation(relatedObject.relationId);
+                }
+            }
+        }
+
+        if(!hasRelation) {
+            await this.addOutgoingRelation(id, aType, "NOW()", aEndAt);
+        }
+    }
+
+    async replaceIncomingRelation(aIdOrPost, aType, aObjectType, aEndAt = null) {
+        let id = this._idFromPostOrId(aIdOrPost);
+
+        let hasRelation = false;
+        let objects = await this._database.getRelations([this.id], "in", aType, aObjectType);
+        if(objects.length) {
+            let currentArray = objects;
+            let currentArrayLength = currentArray.length;
+            for(let i = 0; i < currentArrayLength; i++) {
+                let relatedObject = currentArray[i];
+                if(relatedObject.id === id && relatedObject.endAt === aEndAt && !hasRelation) {
+                    hasRelation = true;
+                }
+                else {
+                    await this._database.endRelation(relatedObject.relationId);
+                }
+            }
+        }
+
+        if(!hasRelation) {
+            await this.addIncomingRelation(id, aType, "NOW()", aEndAt);
+        }
+    }
+
     async setUrl(aUrl) {
         let isSet = await this._database.updateUrl(this.id, aUrl);
 

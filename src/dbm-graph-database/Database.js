@@ -156,10 +156,16 @@ export default class Database extends Dbm.core.BaseObject {
 		return id;
 	}
 
-    async getTypeObject(aObjectType, aIdentifier, aDefaultVisibility = "public") {
-        let objectTypeId = this.getObjectType(aObjectType);
+    async endRelation(aId, aTime = "NOW()") {
+        let table = "Relations";
+        let query = "UPDATE " + table + " SET endAt = " + aTime + " WHERE id = " + aId;
+		let result = await this.connection.query(query);
+    }
 
-        let query = "SELECT id as id FROM Objects INNER JOIN Identifiers ON Objects.id = Identifiers.object INNER JOIN ObjectTypesLink ON Objects.id = ObjectTypesLink.id WHERE ObjectTypesLink.type = " + objectTypeId + " AND Identifiers.identifier = " + this.connection.escape(aIdentifier) + " LIMIT 1";
+    async getTypeObject(aObjectType, aIdentifier, aDefaultVisibility = "public") {
+        let objectTypeId = await this.getObjectType(aObjectType);
+
+        let query = "SELECT Objects.id as id FROM Objects INNER JOIN Identifiers ON Objects.id = Identifiers.object INNER JOIN ObjectTypesLink ON Objects.id = ObjectTypesLink.id WHERE ObjectTypesLink.type = " + objectTypeId + " AND Identifiers.identifier = " + this.connection.escape(aIdentifier) + " LIMIT 1";
 
 		let result = await this.connection.query(query);
 		let rows = result[0];
@@ -174,8 +180,25 @@ export default class Database extends Dbm.core.BaseObject {
 
             return object;
         }
-        
-        
+    }
+
+    async getIdentifiableObject(aObjectType, aIdentifier, aDefaultVisibility = "private") {
+        let objectTypeId = await this.getObjectType(aObjectType);
+
+        let query = "SELECT Objects.id as id FROM Objects INNER JOIN Identifiers ON Objects.id = Identifiers.object INNER JOIN ObjectTypesLink ON Objects.id = ObjectTypesLink.id WHERE ObjectTypesLink.type = " + objectTypeId + " AND Identifiers.identifier = " + this.connection.escape(aIdentifier) + " LIMIT 1";
+
+		let result = await this.connection.query(query);
+		let rows = result[0];
+
+		if(rows.length) {
+			return this.getObject(rows[0].id);
+		}
+		else {
+            let object = await this.createObject(aDefaultVisibility, [aObjectType]);
+            await object.setIdentifier(aIdentifier);
+
+            return object;
+        }
     }
 
     getObject(aId) {
@@ -260,11 +283,41 @@ export default class Database extends Dbm.core.BaseObject {
         
         let query = "INSERT INTO Identifiers (object, identifier) VALUES (" + aId + ", " + this.connection.escape(aIdentifier) + ")";
 
-        console.log(query);
+        //console.log(query);
         let result = await this.connection.query(query);
 
         return null;
         
+    }
+
+    async getRelations(aFromIds, aDirection, aType, aObjectType = "*", aTime = "NOW()") {
+        if(!aFromIds.length) {
+            return [];
+        }
+
+        let columns = this.directionColumns[aDirection];
+        let typeId = await this.getRelationType(aType); //METODO: do not create new types
+        let idsString = aFromIds.join(",");
+
+        let query;
+        if(aObjectType === "*") {
+            query = "SELECT Relations." + columns["thisColumn"] + " as fromId, Relations.id as relationId, Objects.id as id, Relations.startAt as startAt, Relations.endAt as endAt FROM Objects INNER JOIN Relations ON Objects.id = Relations." + columns["relatedColumn"] + " WHERE Relations.type = " + typeId + " AND Relations." + columns["thisColumn"] + " IN (" + idsString + ")";
+        }
+        else {
+            let objectTypeId = await this.getObjectType(aObjectType); //METODO: do not create new types
+            query = "SELECT Relations." + columns["thisColumn"] + " as fromId, Relations.id as relationId, Objects.id as id, Relations.startAt as startAt, Relations.endAt as endAt FROM Objects INNER JOIN Relations ON Objects.id = Relations." + columns["relatedColumn"] + " INNER JOIN ObjectTypesLink ON Objects.id = ObjectTypesLink.id WHERE Relations.type = " + typeId + " AND Relations." + columns["thisColumn"] + " IN (" + idsString + ") AND ObjectTypesLink.type = " + objectTypeId + "";
+        }
+
+        if(aTime !== null) {
+             query += " AND (Relations.startAt <= " + aTime + " OR Relations.startAt IS NULL) AND (Relations.endAt > " + aTime + " OR Relations.endAt IS NULL)";
+        }
+
+        let result = await this.connection.query(query);
+        let rows = result[0];
+
+        //let returnArray = rows.map(function(aRow) {return {"id": aRow.id, "relationId": aRow.relationId, "fromId": aRow.fromId}});
+
+        return rows;
     }
 
     async runObjectRelationQuery(aFromIds, aDirection, aType, aObjectType = "*", aTime = "NOW()") {
@@ -305,7 +358,7 @@ export default class Database extends Dbm.core.BaseObject {
         let currentArrayLength = currentArray.length;
         for(let i = 0; i < currentArrayLength; i++) {
             let currentPath = currentArray[i].split(":");
-            let time = null;
+            let time = "NOW()";
             if(currentPath.length > 3) {
                 if(currentPath[3] === "*") {
                     time = null;
