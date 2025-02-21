@@ -129,6 +129,15 @@ export default class Database extends Dbm.core.BaseObject {
 		return this.getObject(id);
 	}
 
+    _getUtcDate(aDate) {
+        if(aDate instanceof Date) {
+            let tempArray = aDate.toISOString().split("T");
+            return tempArray[0] + " " + tempArray[1].split(".")[0];
+        }
+
+        return aDate;
+    }
+
 	async createRelation(aFrom, aType, aTo, aStartAt = "NOW()", aEndAt = null) {
 		let typeId = await this.getIdType('relation');
 		let table = "Relations";
@@ -140,17 +149,17 @@ export default class Database extends Dbm.core.BaseObject {
             aStartAt = "NULL";
         }
         else if(aStartAt !== "NOW()") {
-            aStartAt = this.connection.escape(aStartAt);
+            aStartAt = this.connection.escape(this._getUtcDate(aStartAt));
         }
 
         if(aEndAt === null ) {
             aEndAt = "NULL";
         }
         else {
-            aEndAt = this.connection.escape(aEndAt);
+            aEndAt = this.connection.escape(this._getUtcDate(aEndAt));
         }
 
-		let query = "INSERT INTO " + table + " (id, fromObject, type, toObject, startAt, endAt) VALUES (" + id + ", " + aFrom + ", " + relationTypeId + ", " + aTo + ", " + aStartAt + ", " + aEndAt + ")";
+		let query = "INSERT INTO " + table + " (id, fromObject, type, toObject, startAt, endAt) VALUES (" + id + ", " + this.connection.escape(aFrom) + ", " + relationTypeId + ", " + this.connection.escape(aTo) + ", " + aStartAt + ", " + aEndAt + ")";
 		let result = await this.connection.query(query);
 
 		return id;
@@ -158,7 +167,7 @@ export default class Database extends Dbm.core.BaseObject {
 
     async endRelation(aId, aTime = "NOW()") {
         let table = "Relations";
-        let query = "UPDATE " + table + " SET endAt = " + aTime + " WHERE id = " + aId;
+        let query = "UPDATE " + table + " SET endAt = " + aTime + " WHERE id = " + this.connection.escape(aId);
 		let result = await this.connection.query(query);
     }
 
@@ -183,6 +192,16 @@ export default class Database extends Dbm.core.BaseObject {
     }
 
     async getIdentifiableObject(aObjectType, aIdentifier, aDefaultVisibility = "private") {
+        let object = await this.getIdentifiableObjectIfExists(aObjectType, aIdentifier);
+
+		if(!object) {
+            let object = await this.createObject(aDefaultVisibility, [aObjectType]);
+            await object.setIdentifier(aIdentifier);
+        }
+        return object;
+    }
+
+    async getIdentifiableObjectIfExists(aObjectType, aIdentifier) {
         let objectTypeId = await this.getObjectType(aObjectType);
 
         let query = "SELECT Objects.id as id FROM Objects INNER JOIN Identifiers ON Objects.id = Identifiers.object INNER JOIN ObjectTypesLink ON Objects.id = ObjectTypesLink.id WHERE ObjectTypesLink.type = " + objectTypeId + " AND Identifiers.identifier = " + this.connection.escape(aIdentifier) + " LIMIT 1";
@@ -193,12 +212,8 @@ export default class Database extends Dbm.core.BaseObject {
 		if(rows.length) {
 			return this.getObject(rows[0].id);
 		}
-		else {
-            let object = await this.createObject(aDefaultVisibility, [aObjectType]);
-            await object.setIdentifier(aIdentifier);
 
-            return object;
-        }
+        return null;
     }
 
     getObject(aId) {
