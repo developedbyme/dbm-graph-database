@@ -195,7 +195,7 @@ export default class Database extends Dbm.core.BaseObject {
         let object = await this.getIdentifiableObjectIfExists(aObjectType, aIdentifier);
 
 		if(!object) {
-            let object = await this.createObject(aDefaultVisibility, [aObjectType]);
+            object = await this.createObject(aDefaultVisibility, [aObjectType]);
             await object.setIdentifier(aIdentifier);
         }
         return object;
