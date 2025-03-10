@@ -151,6 +151,14 @@ export default class DatabaseObject {
         return url;
     }
 
+    async setVisibility(aVisibility) {
+        await this._database.setObjectVisibility(this.id, aVisibility);
+    }
+
+    async getVisibility() {
+        return await this._database.getObjectVisibility(this.id);
+    }
+
     _idFromPostOrId(aIdOrPost) {
         if(aIdOrPost instanceof DatabaseObject) {
             return aIdOrPost.id;

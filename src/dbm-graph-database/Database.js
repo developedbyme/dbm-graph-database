@@ -129,6 +129,29 @@ export default class Database extends Dbm.core.BaseObject {
 		return this.getObject(id);
 	}
 
+    async setObjectVisibility(aId, aVisibility) {
+        if(typeof(aVisibility) === "string") {
+            aVisibility = await this.getVisibilityType(aVisibility);
+        }
+
+        let table = "Objects";
+        let query = "UPDATE " + table + " SET visibility = " + aVisibility + " WHERE id = " + this.connection.escape(aId);
+        let result = await this.connection.query(query);
+    }
+
+    async getObjectVisibility(aId) {
+        let query = "SELECT Visibilities.name as name FROM Visibilities INNER JOIN Objects ON Objects.visibility = Visibilities.id WHERE Objects.id = " + this.connection.escape(aId) + " LIMIT 1";
+
+        let result = await this.connection.query(query);
+        let rows = result[0];
+
+        if(rows.length) {
+			return rows[0].name;
+		}
+
+        return null;
+    }
+
     _getUtcDate(aDate) {
         if(aDate instanceof Date) {
             let tempArray = aDate.toISOString().split("T");
