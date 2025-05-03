@@ -70,7 +70,7 @@ export default class DatabaseObject {
     }
 
     async updateField(aName, aValue) {
-        this._database.updateField(this.id, aName, aValue);
+        await this._database.updateField(this.id, aName, aValue);
 
         return this;
     }
@@ -78,22 +78,23 @@ export default class DatabaseObject {
     async addOutgoingRelation(aIdOrPost, aType, aStartAt = "NOW()", aEndAt = null) {
         let id = this._idFromPostOrId(aIdOrPost);
 
-        this._database.createRelation(this.id, aType, id, aStartAt, aEndAt);
+        let relation = await this._database.createRelation(this.id, aType, id, aStartAt, aEndAt);
 
-        return this;
+        return relation;
     }
 
     async addIncomingRelation(aIdOrPost, aType, aStartAt = "NOW()", aEndAt = null) {
         let id = this._idFromPostOrId(aIdOrPost);
 
-        this._database.createRelation(id, aType, this.id, aStartAt, aEndAt);
+        let relation = this._database.createRelation(id, aType, this.id, aStartAt, aEndAt);
 
-        return this;
+        return relation;
     }
 
     async replaceOutgoingRelation(aIdOrPost, aType, aObjectType, aEndAt = null) {
         let id = this._idFromPostOrId(aIdOrPost);
 
+        let relationId = 0;
         let hasRelation = false;
         let objects = await this._database.getRelations([this.id], "out", aType, aObjectType);
         if(objects.length) {
@@ -103,6 +104,7 @@ export default class DatabaseObject {
                 let relatedObject = currentArray[i];
                 if(relatedObject.id === id && relatedObject.endAt === aEndAt && !hasRelation) {
                     hasRelation = true;
+                    relationId = relatedObject.relationId;
                 }
                 else {
                     await this._database.endRelation(relatedObject.relationId);
@@ -111,13 +113,16 @@ export default class DatabaseObject {
         }
 
         if(!hasRelation) {
-            await this.addOutgoingRelation(id, aType, "NOW()", aEndAt);
+            relationId = await this.addOutgoingRelation(id, aType, "NOW()", aEndAt);
         }
+
+        return relationId;
     }
 
     async replaceIncomingRelation(aIdOrPost, aType, aObjectType, aEndAt = null) {
         let id = this._idFromPostOrId(aIdOrPost);
 
+        let relationId = 0;
         let hasRelation = false;
         let objects = await this._database.getRelations([this.id], "in", aType, aObjectType);
         if(objects.length) {
@@ -127,6 +132,7 @@ export default class DatabaseObject {
                 let relatedObject = currentArray[i];
                 if(relatedObject.id === id && relatedObject.endAt === aEndAt && !hasRelation) {
                     hasRelation = true;
+                    relationId = relatedObject.relationId;
                 }
                 else {
                     await this._database.endRelation(relatedObject.relationId);
@@ -135,7 +141,40 @@ export default class DatabaseObject {
         }
 
         if(!hasRelation) {
-            await this.addIncomingRelation(id, aType, "NOW()", aEndAt);
+            relationId = await this.addIncomingRelation(id, aType, "NOW()", aEndAt);
+        }
+        return relationId;
+    }
+
+    async removeIncomingRelationTo(aIdOrPost, aType) {
+        let id = this._idFromPostOrId(aIdOrPost);
+
+        let objects = await this._database.getRelations([this.id], "in", aType, "*");
+        if(objects.length) {
+            let currentArray = objects;
+            let currentArrayLength = currentArray.length;
+            for(let i = 0; i < currentArrayLength; i++) {
+                let relatedObject = currentArray[i];
+                if(relatedObject.id === id) {
+                    await this._database.endRelation(relatedObject.relationId);
+                }
+            }
+        }
+    }
+
+    async removeOutgoingRelationTo(aIdOrPost, aType) {
+        let id = this._idFromPostOrId(aIdOrPost);
+
+        let objects = await this._database.getRelations([this.id], "out", aType, "*");
+        if(objects.length) {
+            let currentArray = objects;
+            let currentArrayLength = currentArray.length;
+            for(let i = 0; i < currentArrayLength; i++) {
+                let relatedObject = currentArray[i];
+                if(relatedObject.id === id) {
+                    await this._database.endRelation(relatedObject.relationId);
+                }
+            }
         }
     }
 
