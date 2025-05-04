@@ -564,4 +564,14 @@ export default class Database extends Dbm.core.BaseObject {
 		
         return this.getUser(userId);
     }
+
+    async getObjectTypesForObject(aId) {
+        let query = "SELECT ObjectTypes.id as id, ObjectTypes.name as name FROM ObjectTypes INNER JOIN ObjectTypesLink ON ObjectTypesLink.type = ObjectTypes.id WHERE ObjectTypesLink.id = " + aId;
+
+        let result = await this.connection.query(query);
+
+        console.log(result);
+
+        return result[0];
+    }
 }

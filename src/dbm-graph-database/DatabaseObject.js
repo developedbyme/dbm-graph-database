@@ -1,3 +1,5 @@
+import Dbm from "dbm";
+
 export default class DatabaseObject {
     constructor() {
         this._id = 0;
@@ -196,6 +198,12 @@ export default class DatabaseObject {
 
     async getVisibility() {
         return await this._database.getObjectVisibility(this.id);
+    }
+
+    async getObjectTypes() {
+        let types = await this._database.getObjectTypesForObject(this.id);
+
+        return Dbm.utils.ArrayFunctions.mapField(types, "name");
     }
 
     _idFromPostOrId(aIdOrPost) {
