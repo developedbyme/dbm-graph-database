@@ -10,6 +10,10 @@ export default class Database extends Dbm.core.BaseObject {
         super();
 
         this.connection = null;
+        this._host = null;
+        this._user = null;
+        this._password = null;
+        this._database = null;
 
         this.directionColumns = {
             "out": {
@@ -26,15 +30,55 @@ export default class Database extends Dbm.core.BaseObject {
     }
 
     async setConnection(aHost, aUser, aPassword, aDatabase) {
-        this.connection = await mysql.createConnection({
-            host: aHost,
-            user: aUser,
-            password: aPassword,
-            database: aDatabase,
-            dateStrings: true
+
+        this._host = aHost;
+        this._user = aUser;
+        this._password = aPassword;
+        this._database = aDatabase;
+
+        this.connection = mysql.createPool({
+            host: this._host,
+            user: this._user,
+            password: this._password,
+            database: this._database,
+            dateStrings: true,
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0
         });
 
         return this;
+    }
+
+    restartConnection() {
+
+        if(this.connection) {
+            this.connection.end();
+            this.connection = null;
+        }
+
+        this.connection = mysql.createPool({
+            host: this._host,
+            user: this._user,
+            password: this._password,
+            database: this._database,
+            dateStrings: true,
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0
+        });
+
+        return this;
+    }
+
+    async testConnection() {
+        try {
+            await this.connection.query('SELECT 1');
+            return true;
+        }
+        catch(theError) {
+            return false;
+        }
     }
 
     async createId(aIdTypeId) {
