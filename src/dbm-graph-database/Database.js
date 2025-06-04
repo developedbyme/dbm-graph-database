@@ -618,4 +618,15 @@ export default class Database extends Dbm.core.BaseObject {
 
         return result[0];
     }
+
+    async getGlobalObject(aIdentifier) {
+        let globalObject = await this.getIdentifiableObjectIfExists("globalObject", aIdentifier);
+        if(globalObject) {
+            let linkedItem = globalObject.singleObjectRelationQuery("out:pointingTo:*");
+            if(linkedItem) {
+                return linkedItem;
+            }
+        }
+        return null;
+    }
 }
