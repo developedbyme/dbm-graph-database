@@ -148,6 +148,80 @@ export default class DatabaseObject {
         return relationId;
     }
 
+    async replaceMultipleIncomingRelation(aIdsOrPosts, aType, aObjectType, aEndAt = null) {
+
+        let removedIds = [];
+
+        let ids = this._idsFromPostsOrIds(aIdsOrPosts);
+        let exisitngIds = [];
+        let objects = await this._database.getRelations([this.id], "in", aType, aObjectType);
+        if(objects.length) {
+            {
+                let currentArray = objects;
+                let currentArrayLength = currentArray.length;
+                for(let i = 0; i < currentArrayLength; i++) {
+                    let relatedObject = currentArray[i];
+                    if(ids.indexOf(relatedObject.id) >= 0 && relatedObject.endAt === aEndAt) {
+                        exisitngIds.push(relatedObject.id);
+                    }
+                    else {
+                        removedIds.push(relatedObject.id);
+                        await this._database.endRelation(relatedObject.relationId);
+                    }
+                }
+            }
+
+            {
+                let idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
+
+                let currentArray = idsToAdd;
+                let currentArrayLength = currentArray.length;
+                for(let i = 0; i < currentArrayLength; i++) {
+                    relationId = await this.addIncomingRelation(currentArray[i], aType, "NOW()", aEndAt);
+                }
+            }
+        }
+
+        return {"added": idsToAdd, "exisitng": exisitngIds, "removed": removedIds};
+    }
+
+    async replaceMultipleOutgoingRelation(aIdsOrPosts, aType, aObjectType, aEndAt = null) {
+
+        let removedIds = [];
+
+        let ids = this._idsFromPostsOrIds(aIdsOrPosts);
+        let exisitngIds = [];
+        let objects = await this._database.getRelations([this.id], "ioutn", aType, aObjectType);
+        if(objects.length) {
+            {
+                let currentArray = objects;
+                let currentArrayLength = currentArray.length;
+                for(let i = 0; i < currentArrayLength; i++) {
+                    let relatedObject = currentArray[i];
+                    if(ids.indexOf(relatedObject.id) >= 0 && relatedObject.endAt === aEndAt) {
+                        exisitngIds.push(relatedObject.id);
+                    }
+                    else {
+                        removedIds.push(relatedObject.id);
+                        await this._database.endRelation(relatedObject.relationId);
+                    }
+                }
+            }
+
+            {
+                let idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
+
+                let currentArray = idsToAdd;
+                let currentArrayLength = currentArray.length;
+                for(let i = 0; i < currentArrayLength; i++) {
+                    relationId = await this.addOutgoingRelation(currentArray[i], aType, "NOW()", aEndAt);
+                }
+            }
+        }
+
+        return {"added": idsToAdd, "exisitng": exisitngIds, "removed": removedIds};
+    }
+
     async removeIncomingRelationTo(aIdOrPost, aType) {
         let id = this._idFromPostOrId(aIdOrPost);
 
@@ -211,6 +285,18 @@ export default class DatabaseObject {
             return aIdOrPost.id;
         }
 
-        return aIdOrPost;
+        return 1*aIdOrPost;
+    }
+
+    _idsFromPostsOrIds(aIdsOrPosts) {
+        
+        let currentArray = aIdsOrPosts;
+        let currentArrayLength = currentArray.length;
+        let ids = new Array(currentArrayLength);
+        for(let i = 0; i < currentArrayLength; i++) {
+            ids[i] = this._idFromPostOrId(currentArray[i]);
+        }
+
+        return ids;
     }
 }
