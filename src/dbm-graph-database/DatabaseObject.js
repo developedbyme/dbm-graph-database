@@ -80,6 +80,10 @@ export default class DatabaseObject {
     async addOutgoingRelation(aIdOrPost, aType, aStartAt = "NOW()", aEndAt = null) {
         let id = this._idFromPostOrId(aIdOrPost);
 
+        if(!id) {
+            return null;
+        }
+
         let relation = await this._database.createRelation(this.id, aType, id, aStartAt, aEndAt);
 
         return relation;
@@ -87,6 +91,10 @@ export default class DatabaseObject {
 
     async addIncomingRelation(aIdOrPost, aType, aStartAt = "NOW()", aEndAt = null) {
         let id = this._idFromPostOrId(aIdOrPost);
+
+        if(!id) {
+            return null;
+        }
 
         let relation = this._database.createRelation(id, aType, this.id, aStartAt, aEndAt);
 
@@ -115,6 +123,9 @@ export default class DatabaseObject {
         }
 
         if(!hasRelation) {
+            if(aIdOrPost) {
+
+            }
             relationId = await this.addOutgoingRelation(id, aType, "NOW()", aEndAt);
         }
 
@@ -285,7 +296,12 @@ export default class DatabaseObject {
             return aIdOrPost.id;
         }
 
-        return 1*aIdOrPost;
+        let numericId = 1*aIdOrPost;
+        if(aIdOrPost && !isNaN(1*numericId)) {
+            return numericId
+        }
+
+        return 0;
     }
 
     _idsFromPostsOrIds(aIdsOrPosts) {

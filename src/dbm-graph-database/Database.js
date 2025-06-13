@@ -407,7 +407,7 @@ export default class Database extends Dbm.core.BaseObject {
         let returnObject = {};
 
         {
-            let query = "SELECT Relations.id as relationId, Relations.toObject as id, Relations.startAt as startAt, Relations.endAt as endAt, Relations.type as type FROM Relations WHERE Relations.fromObject = " + aId;
+            let query = "SELECT Relations.id as relationId, Relations.toObject as id, Relations.startAt as startAt, Relations.endAt as endAt, RelationTypes.name as type FROM Relations INNER JOIN RelationTypes ON Relations.type = RelationTypes.id WHERE Relations.fromObject = " + aId;
 
             let result = await this.connection.query(query);
             let rows = result[0];
@@ -416,7 +416,7 @@ export default class Database extends Dbm.core.BaseObject {
         }
 
         {
-            let query = "SELECT Relations.fromObject as id, Relations.id as relationId, Relations.startAt as startAt, Relations.endAt as endAt, Relations.type as type FROM Relations WHERE Relations.toObject = " + aId;
+            let query = "SELECT Relations.fromObject as id, Relations.id as relationId, Relations.startAt as startAt, Relations.endAt as endAt, RelationTypes.name as type FROM Relations INNER JOIN RelationTypes ON Relations.type = RelationTypes.id WHERE Relations.toObject = " + aId;
 
             let result = await this.connection.query(query);
             let rows = result[0];
