@@ -159,8 +159,9 @@ export default class DatabaseObject {
         return relationId;
     }
 
-    async replaceMultipleIncomingRelation(aIdsOrPosts, aType, aObjectType, aEndAt = null) {
+    async replaceMultipleIncomingRelations(aIdsOrPosts, aType, aObjectType, aEndAt = null) {
 
+        let idsToAdd = [];
         let removedIds = [];
 
         let ids = this._idsFromPostsOrIds(aIdsOrPosts);
@@ -183,12 +184,12 @@ export default class DatabaseObject {
             }
 
             {
-                let idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
+                idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
 
                 let currentArray = idsToAdd;
                 let currentArrayLength = currentArray.length;
                 for(let i = 0; i < currentArrayLength; i++) {
-                    relationId = await this.addIncomingRelation(currentArray[i], aType, "NOW()", aEndAt);
+                    let relationId = await this.addIncomingRelation(currentArray[i], aType, "NOW()", aEndAt);
                 }
             }
         }
@@ -196,8 +197,9 @@ export default class DatabaseObject {
         return {"added": idsToAdd, "exisitng": exisitngIds, "removed": removedIds};
     }
 
-    async replaceMultipleOutgoingRelation(aIdsOrPosts, aType, aObjectType, aEndAt = null) {
+    async replaceMultipleOutgoingRelations(aIdsOrPosts, aType, aObjectType, aEndAt = null) {
 
+        let idsToAdd = [];
         let removedIds = [];
 
         let ids = this._idsFromPostsOrIds(aIdsOrPosts);
@@ -220,12 +222,12 @@ export default class DatabaseObject {
             }
 
             {
-                let idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
+                idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
 
                 let currentArray = idsToAdd;
                 let currentArrayLength = currentArray.length;
                 for(let i = 0; i < currentArrayLength; i++) {
-                    relationId = await this.addOutgoingRelation(currentArray[i], aType, "NOW()", aEndAt);
+                    let relationId = await this.addOutgoingRelation(currentArray[i], aType, "NOW()", aEndAt);
                 }
             }
         }
