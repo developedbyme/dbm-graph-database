@@ -17,6 +17,8 @@ export default class DatabaseObject {
         return this._id;
     }
 
+
+
     async getIdentifier() {
         return await this._database.getObjectIdentifier(this.id);
     }
@@ -291,6 +293,14 @@ export default class DatabaseObject {
         let types = await this._database.getObjectTypesForObject(this.id);
 
         return Dbm.utils.ArrayFunctions.mapField(types, "name");
+    }
+
+    async addObjectType(aType) {
+        await this._database.addObjectType(this.id, aType);
+    }
+
+    async removeObjectType(aType) {
+        await this._database.removeObjectType(this.id, aType);
     }
 
     _idFromPostOrId(aIdOrPost) {

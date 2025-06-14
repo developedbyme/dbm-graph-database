@@ -148,6 +148,16 @@ export default class Database extends Dbm.core.BaseObject {
 
 		let query = "INSERT INTO " + table + " (id, type) VALUES (" + aObjectId + ", " + objectTypeId + ")";
 		let result = await this.connection.query(query);
+        return result;
+	}
+
+    async removeObjectType(aObjectId, aType) {
+		let objectTypeId = await this.getObjectType(aType);
+		let table = "ObjectTypesLink";
+
+		let query = "DELETE FROM " + table + " WHERE id = " + aObjectId + " AND type =" + objectTypeId;
+		let result = await this.connection.query(query);
+        return result;
 	}
 
 	async createObject(aVisibility, aTypes) {
