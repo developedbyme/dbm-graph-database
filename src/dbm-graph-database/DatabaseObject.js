@@ -184,15 +184,15 @@ export default class DatabaseObject {
                     }
                 }
             }
+        }
 
-            {
-                idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
+        {
+            idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
 
-                let currentArray = idsToAdd;
-                let currentArrayLength = currentArray.length;
-                for(let i = 0; i < currentArrayLength; i++) {
-                    let relationId = await this.addIncomingRelation(currentArray[i], aType, "NOW()", aEndAt);
-                }
+            let currentArray = idsToAdd;
+            let currentArrayLength = currentArray.length;
+            for(let i = 0; i < currentArrayLength; i++) {
+                let relationId = await this.addIncomingRelation(currentArray[i], aType, "NOW()", aEndAt);
             }
         }
 
@@ -222,15 +222,15 @@ export default class DatabaseObject {
                     }
                 }
             }
+        }
 
-            {
-                idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
+        {
+            idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
 
-                let currentArray = idsToAdd;
-                let currentArrayLength = currentArray.length;
-                for(let i = 0; i < currentArrayLength; i++) {
-                    let relationId = await this.addOutgoingRelation(currentArray[i], aType, "NOW()", aEndAt);
-                }
+            let currentArray = idsToAdd;
+            let currentArrayLength = currentArray.length;
+            for(let i = 0; i < currentArrayLength; i++) {
+                let relationId = await this.addOutgoingRelation(currentArray[i], aType, "NOW()", aEndAt);
             }
         }
 
