@@ -15,6 +15,14 @@ export default class User extends DatabaseObject {
 		let result = await this._database.connection.query(query);
     }
 
+    async getUsername() {
+        
+        let query = "SELECT username FROM Users WHERE object = " + this.id;
+		let result = await this._database.connection.query(query);
+
+        return result[0][0].username;
+    }
+
     async setPassword(aPassword) {
         let salt = this._database.salt;
 		let personalSalt = await this.getPersonalSalt();
