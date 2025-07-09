@@ -260,7 +260,7 @@ export default class Database extends Dbm.core.BaseObject {
 			return this.getObject(rows[0].id);
 		}
 		else {
-            let object = await this.createObject(aDefaultVisibility, [aObjectType]);
+            let object = await this.createObject(aDefaultVisibility, [aObjectType, "type"]);
             await object.setIdentifier(aIdentifier);
             await object.updateField("name", aIdentifier);
 
