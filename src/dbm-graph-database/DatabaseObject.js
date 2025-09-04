@@ -206,7 +206,7 @@ export default class DatabaseObject {
 
         let ids = this._idsFromPostsOrIds(aIdsOrPosts);
         let exisitngIds = [];
-        let objects = await this._database.getRelations([this.id], "ioutn", aType, aObjectType);
+        let objects = await this._database.getRelations([this.id], "out", aType, aObjectType);
         if(objects.length) {
             {
                 let currentArray = objects;
