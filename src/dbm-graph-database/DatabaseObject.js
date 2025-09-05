@@ -3,7 +3,7 @@ import Dbm from "dbm";
 export default class DatabaseObject {
     constructor() {
         this._id = 0;
-        this._database = null;
+        Object.defineProperty(this, "_database", {value: null, enumerable: false, writable: true, configurable: true});
     }
 
     setup(aDatabase, aId) {
@@ -16,8 +16,6 @@ export default class DatabaseObject {
     get id() {
         return this._id;
     }
-
-
 
     async getIdentifier() {
         return await this._database.getObjectIdentifier(this.id);
@@ -326,5 +324,22 @@ export default class DatabaseObject {
         }
 
         return ids;
+    }
+
+    async getSingleLinkedType(aType) {
+        let type = await this.singleObjectRelationQuery("in:for:" + aType);
+        if(type) {
+            let identifier = await type.getIdentifier();
+            return identifier;
+        }
+
+        return null;
+    }
+
+    async addLinkedType(aObjectType, aIdentifier) {
+        let objectType = await this._database.getTypeObject(aObjectType, aIdentifier);
+        await this.addIncomingRelation(objectType, "for");
+
+        return this;
     }
 }

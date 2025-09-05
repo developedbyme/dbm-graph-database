@@ -11,8 +11,8 @@ export default class Database extends Dbm.core.BaseObject {
 
         this.connection = null;
         this._host = null;
-        this._user = null;
-        this._password = null;
+        Object.defineProperty(this, "_user", {value: null, enumerable: false, writable: true, configurable: true});
+        Object.defineProperty(this, "_password", {value: null, enumerable: false, writable: true, configurable: true});
         this._database = null;
 
         this.directionColumns = {
@@ -26,7 +26,7 @@ export default class Database extends Dbm.core.BaseObject {
             }
         }
 
-        this.salt = '=t]j4a{zv&Qqc:A_5ug;5uo#IT#5xfO@|SC((+6`fEUg`IwC+O=G/9DK,&m_!9`,';
+        Object.defineProperty(this, "salt", {value: '=t]j4a{zv&Qqc:A_5ug;5uo#IT#5xfO@|SC((+6`fEUg`IwC+O=G/9DK,&m_!9`,', enumerable: false, writable: true, configurable: true});
     }
 
     async setConnection(aHost, aUser, aPassword, aDatabase) {
@@ -244,6 +244,9 @@ export default class Database extends Dbm.core.BaseObject {
 
     async endRelation(aId, aTime = "NOW()") {
         let table = "Relations";
+        if(aTime !== "NOW()") {
+            aTime = this.connection.escape(this._getUtcDate(aTime));
+        }
         let query = "UPDATE " + table + " SET endAt = " + aTime + " WHERE id = " + this.connection.escape(aId);
 		let result = await this.connection.query(query);
     }
@@ -638,5 +641,25 @@ export default class Database extends Dbm.core.BaseObject {
             }
         }
         return null;
+    }
+
+    async addActionToProcess(aActionType, aFrom = null) {
+        let actionType = await this.getTypeObject("type/actionType", aActionType);
+
+        let actionStatus = await this.getTypeObject("status/actionStatus", "readyToProcess");
+        let action = await this.createObject("private", ["action"]);
+
+        if(aFrom !== null) {
+            let currentArray = Dbm.utils.ArrayFunctions.singleOrArray(aFrom);
+            let currentArrayLength = currentArray.length;
+            for(let i = 0; i < currentArrayLength; i++) {
+                await action.addOutgoingRelation(currentArray[i], "from");
+            }
+        }
+        
+        await action.addIncomingRelation(actionType, "for");
+        await action.addIncomingRelation(actionStatus, "for");
+
+        return action;
     }
 }
