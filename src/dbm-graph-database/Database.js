@@ -535,9 +535,63 @@ export default class Database extends Dbm.core.BaseObject {
         return returnObject;
     }
 
+    async getFieldTranslation(aId, aFieldName) {
+        let fieldName = this.connection.escape(aFieldName);
+        let query = "SELECT Identifiers.identifier as language, FieldTranslations.value as value FROM FieldTranslations INNER JOIN Identifiers ON FieldTranslations.language = Identifiers.object WHERE FieldTranslations.object = " + aId + " AND FieldTranslations.name = " + fieldName;
+        console.log(query);
+
+        let result = await this.connection.query(query);
+        let rows = result[0];
+
+        let returnObject = new Object();
+
+        let currentArray = rows;
+        let currentArrayLength = currentArray.length;
+        for(let i = 0; i < currentArrayLength; i++) {
+            let currentRow = currentArray[i];
+            returnObject[currentRow["language"]] = JSON.parse(currentRow["value"]);
+        }
+
+        return returnObject;
+    }
+
+    async getAllFieldTranslations(aId) {
+        let query = "SELECT Identifiers.identifier as language, FieldTranslations.name as name, FieldTranslations.value as value FROM FieldTranslations INNER JOIN Identifiers ON FieldTranslations.language = Identifiers.object WHERE FieldTranslations.object = " + aId;
+
+        let result = await this.connection.query(query);
+        let rows = result[0];
+
+        let returnObject = new Object();
+
+        let currentArray = rows;
+        let currentArrayLength = currentArray.length;
+        for(let i = 0; i < currentArrayLength; i++) {
+            let currentRow = currentArray[i];
+
+            let currentField = returnObject[currentRow["name"]];
+            if(!currentField) {
+                currentField = {};
+                returnObject[currentRow["name"]] = currentField;
+            }
+            currentField[currentRow["language"]] = JSON.parse(currentRow["value"]);
+        }
+
+        return returnObject;
+    }
+
     async updateField(aId, aName, aValue) {
         let value = this.connection.escape(JSON.stringify(aValue));
         let query = "INSERT INTO Fields (object, name, value) VALUES (" + aId + ", " + this.connection.escape(aName) + ", " + value + ") ON DUPLICATE KEY UPDATE value = " + value +";";
+
+        let result = await this.connection.query(query);
+
+        return this;
+    }
+
+    async updateFieldTranslation(aId, aName, aLanguage, aValue) {
+        let value = this.connection.escape(JSON.stringify(aValue));
+        let languageId =  (await this.getTypeObject("language", aLanguage)).id;
+        let query = "INSERT INTO FieldTranslations (object, language, name, value) VALUES (" + aId + ", " + languageId + ", " + this.connection.escape(aName) + ", " + value + ") ON DUPLICATE KEY UPDATE value = " + value +";";
 
         let result = await this.connection.query(query);
 

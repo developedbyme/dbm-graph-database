@@ -29,6 +29,14 @@ export default class DatabaseObject {
         return await this._database.getFields(this.id);
     }
 
+    async getFieldTranslation(aFieldName) {
+        return await this._database.getFieldTranslation(this.id, aFieldName);
+    }
+
+    async getAllFieldTranslations() {
+        return await this._database.getAllFieldTranslations(this.id);
+    }
+
     async objectRelationQuery(aPath) {
         let ids = await this._database.objectRelationQuery([this.id], aPath);
         return this._database.getObjects(ids);
@@ -73,6 +81,12 @@ export default class DatabaseObject {
 
     async updateField(aName, aValue) {
         await this._database.updateField(this.id, aName, aValue);
+
+        return this;
+    }
+
+    async updateFieldTranslation(aName, aLanguage, aValue) {
+        await this._database.updateFieldTranslation(this.id, aName, aLanguage, aValue);
 
         return this;
     }
