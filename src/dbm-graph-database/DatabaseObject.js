@@ -356,4 +356,8 @@ export default class DatabaseObject {
 
         return this;
     }
+
+    async trash() {
+        await this._database.trashItem(this.id);
+    }
 }

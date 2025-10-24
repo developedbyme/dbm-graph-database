@@ -716,4 +716,79 @@ export default class Database extends Dbm.core.BaseObject {
 
         return action;
     }
+
+    async trashItem(aId) {
+        if(!aId) {
+            console.error("No id, can't trash item");
+            return;
+        }
+
+        let id = 1*aId;
+        let item = this.getObject(id);
+
+        //METODO: make sure object exists
+
+        let data = {};
+        //METODO: collect object data
+        //Date
+        //Relations
+
+        data["visibility"] = await item.getVisibility();
+        data["url"] = await item.getUrl();
+        data["identifier"] = await item.getIdentifier();
+        data["objectTypes"] = await item.getObjectTypes();
+        data["fields"] = await item.getFields();
+        data["fieldTranslations"] = await item.getAllFieldTranslations();
+
+        {
+            let encodedData = this.connection.escape(JSON.stringify(data));
+            let query = "INSERT INTO Trash (id, data) VALUES (" + id + ", " + encodedData + ")";
+		    let result = await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM Relations WHERE fromObject = " + id;
+            await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM Relations WHERE toObject = " + id;
+            await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM Fields WHERE object = " + id;
+            await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM FieldTranslations WHERE object = " + id;
+            await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM Urls WHERE object = " + id;
+            await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM Identifiers WHERE object = " + id;
+            await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM ObjectTypesLink WHERE id = " + id;
+            await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM Objects WHERE id = " + id;
+            await this.connection.query(query);
+        }
+
+        {
+            let query = "DELETE FROM Ids WHERE id = " + id;
+            await this.connection.query(query);
+        }
+    }
 }
