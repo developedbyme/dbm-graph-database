@@ -538,7 +538,6 @@ export default class Database extends Dbm.core.BaseObject {
     async getFieldTranslation(aId, aFieldName) {
         let fieldName = this.connection.escape(aFieldName);
         let query = "SELECT Identifiers.identifier as language, FieldTranslations.value as value FROM FieldTranslations INNER JOIN Identifiers ON FieldTranslations.language = Identifiers.object WHERE FieldTranslations.object = " + aId + " AND FieldTranslations.name = " + fieldName;
-        console.log(query);
 
         let result = await this.connection.query(query);
         let rows = result[0];
