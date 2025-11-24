@@ -133,6 +133,12 @@ export default class User extends DatabaseObject {
         return publicSessionId;
     }
 
+    async deleteSession(aSessionId) {
+        let userId = this.id;
+        let query = "DELETE FROM Sessions WHERE id = " + aSessionId + " AND user = " + userId;
+		let result = await this._database.connection.query(query);
+    }
+
     async verifySession(aPublicSessionId) {
         let [sessionId, userId, expiry, hashedToken] = aPublicSessionId.split(":");
 
