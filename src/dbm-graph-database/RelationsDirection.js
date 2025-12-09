@@ -25,8 +25,6 @@ export default class RelationsDirection {
             returnObject["from"] = aId;
         }
 
-        console.log(returnObject);
-
         return returnObject;
     }
 

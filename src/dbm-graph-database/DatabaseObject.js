@@ -187,6 +187,13 @@ export default class DatabaseObject {
         return this;
     }
 
+    async changeLinkedType(aObjectType, aIdentifier) {
+        let objectType = await this._database.getTypeObject(aObjectType, aIdentifier);
+        let result = await this.incomingRelations.replace(objectType, "for", aObjectType);
+
+        return result.changed;
+    }
+
     async trash() {
         await this._database.trashItem(this.id);
     }

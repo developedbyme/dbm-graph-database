@@ -680,8 +680,6 @@ export default class Database extends Dbm.core.BaseObject {
 
         let result = await this.connection.query(query);
 
-        console.log(result);
-
         return result[0];
     }
 
@@ -696,22 +694,23 @@ export default class Database extends Dbm.core.BaseObject {
         return null;
     }
 
-    async addActionToProcess(aActionType, aFrom = null) {
-        let actionType = await this.getTypeObject("type/actionType", aActionType);
-
-        let actionStatus = await this.getTypeObject("status/actionStatus", "readyToProcess");
+    async addActionToProcess(aActionType, aFrom = null, aData = null) {
         let action = await this.createObject("private", ["action"]);
+        await action.addLinkedType("type/actionType", aActionType);
+
+        if(aData !== null) {
+            await action.updateField("data", aData);
+        }
 
         if(aFrom !== null) {
             let currentArray = Dbm.utils.ArrayFunctions.singleOrArray(aFrom);
             let currentArrayLength = currentArray.length;
             for(let i = 0; i < currentArrayLength; i++) {
-                await action.addOutgoingRelation(currentArray[i], "from");
+                await action.outgoingRelations.add(currentArray[i], "from");
             }
         }
-        
-        await action.addIncomingRelation(actionType, "for");
-        await action.addIncomingRelation(actionStatus, "for");
+
+        await action.addLinkedType("status/actionStatus", "readyToProcess");
 
         return action;
     }
