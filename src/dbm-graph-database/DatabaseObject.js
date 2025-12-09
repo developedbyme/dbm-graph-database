@@ -1,8 +1,13 @@
 import Dbm from "dbm";
+import DbmGraphDatabase from "../../index.js";
 
 export default class DatabaseObject {
     constructor() {
         this._id = 0;
+
+        this.incomingRelations = DbmGraphDatabase.RelationsDirection.createIncoming(this);
+        this.outgoingRelations = DbmGraphDatabase.RelationsDirection.createOutgoing(this);
+
         Object.defineProperty(this, "_database", {value: null, enumerable: false, writable: true, configurable: true});
     }
 
@@ -91,194 +96,44 @@ export default class DatabaseObject {
         return this;
     }
 
-    async addOutgoingRelation(aIdOrPost, aType, aStartAt = "NOW()", aEndAt = null) {
-        let id = this._idFromPostOrId(aIdOrPost);
-
-        if(!id) {
-            return null;
-        }
-
-        let relation = await this._database.createRelation(this.id, aType, id, aStartAt, aEndAt);
-
-        return relation;
+    async addOutgoingRelation(aIdOrItem, aType, aStartAt = "NOW()", aEndAt = null) {
+        console.warn("Use outgoingRelations.add instead of addOutgoingRelation");
+        return await this.outgoingRelations.add(aIdOrItem, aType, aStartAt, aEndAt);
     }
 
-    async addIncomingRelation(aIdOrPost, aType, aStartAt = "NOW()", aEndAt = null) {
-        let id = this._idFromPostOrId(aIdOrPost);
-
-        if(!id) {
-            return null;
-        }
-
-        let relation = this._database.createRelation(id, aType, this.id, aStartAt, aEndAt);
-
-        return relation;
+    async addIncomingRelation(aIdOrItem, aType, aStartAt = "NOW()", aEndAt = null) {
+        console.warn("Use incomingRelations.add instead of addIncomingRelation");
+        return await this.incomingRelations.add(aIdOrItem, aType, aStartAt, aEndAt);
     }
 
-    async replaceOutgoingRelation(aIdOrPost, aType, aObjectType, aEndAt = null) {
-        let id = this._idFromPostOrId(aIdOrPost);
-
-        let relationId = 0;
-        let hasRelation = false;
-        let objects = await this._database.getRelations([this.id], "out", aType, aObjectType);
-        if(objects.length) {
-            let currentArray = objects;
-            let currentArrayLength = currentArray.length;
-            for(let i = 0; i < currentArrayLength; i++) {
-                let relatedObject = currentArray[i];
-                if(relatedObject.id === id && relatedObject.endAt === aEndAt && !hasRelation) {
-                    hasRelation = true;
-                    relationId = relatedObject.relationId;
-                }
-                else {
-                    await this._database.endRelation(relatedObject.relationId);
-                }
-            }
-        }
-
-        if(!hasRelation) {
-            if(aIdOrPost) {
-
-            }
-            relationId = await this.addOutgoingRelation(id, aType, "NOW()", aEndAt);
-        }
-
-        return relationId;
+    async replaceOutgoingRelation(aIdOrItem, aType, aObjectType, aEndAt = null) {
+        console.warn("Use outgoingRelations.replace instead of replaceOutgoingRelation");
+        return await this.outgoingRelations.replace(aIdOrItem, aType, aObjectType, aEndAt);
     }
 
-    async replaceIncomingRelation(aIdOrPost, aType, aObjectType, aEndAt = null) {
-        let id = this._idFromPostOrId(aIdOrPost);
-
-        let relationId = 0;
-        let hasRelation = false;
-        let objects = await this._database.getRelations([this.id], "in", aType, aObjectType);
-        if(objects.length) {
-            let currentArray = objects;
-            let currentArrayLength = currentArray.length;
-            for(let i = 0; i < currentArrayLength; i++) {
-                let relatedObject = currentArray[i];
-                if(relatedObject.id === id && relatedObject.endAt === aEndAt && !hasRelation) {
-                    hasRelation = true;
-                    relationId = relatedObject.relationId;
-                }
-                else {
-                    await this._database.endRelation(relatedObject.relationId);
-                }
-            }
-        }
-
-        if(!hasRelation) {
-            relationId = await this.addIncomingRelation(id, aType, "NOW()", aEndAt);
-        }
-        return relationId;
+    async replaceIncomingRelation(aIdOrItem, aType, aObjectType, aEndAt = null) {
+        console.warn("Use incomingRelations.replace instead of replaceIncomingRelation");
+        return await this.incomingRelations.replace(aIdOrItem, aType, aObjectType, aEndAt);
     }
 
     async replaceMultipleIncomingRelations(aIdsOrPosts, aType, aObjectType, aEndAt = null) {
-
-        let idsToAdd = [];
-        let removedIds = [];
-
-        let ids = this._idsFromPostsOrIds(aIdsOrPosts);
-        let exisitngIds = [];
-        let objects = await this._database.getRelations([this.id], "in", aType, aObjectType);
-        if(objects.length) {
-            {
-                let currentArray = objects;
-                let currentArrayLength = currentArray.length;
-                for(let i = 0; i < currentArrayLength; i++) {
-                    let relatedObject = currentArray[i];
-                    if(ids.indexOf(relatedObject.id) >= 0 && relatedObject.endAt === aEndAt) {
-                        exisitngIds.push(relatedObject.id);
-                    }
-                    else {
-                        removedIds.push(relatedObject.id);
-                        await this._database.endRelation(relatedObject.relationId);
-                    }
-                }
-            }
-        }
-
-        {
-            idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
-
-            let currentArray = idsToAdd;
-            let currentArrayLength = currentArray.length;
-            for(let i = 0; i < currentArrayLength; i++) {
-                let relationId = await this.addIncomingRelation(currentArray[i], aType, "NOW()", aEndAt);
-            }
-        }
-
-        return {"added": idsToAdd, "exisitng": exisitngIds, "removed": removedIds};
+        console.warn("Use incomingRelations.replaceMultiple instead of replaceMultipleIncomingRelations");
+        return await this.incomingRelations.replaceMultiple(aIdsOrPosts, aType, aObjectType, aEndAt);
     }
 
     async replaceMultipleOutgoingRelations(aIdsOrPosts, aType, aObjectType, aEndAt = null) {
-
-        let idsToAdd = [];
-        let removedIds = [];
-
-        let ids = this._idsFromPostsOrIds(aIdsOrPosts);
-        let exisitngIds = [];
-        let objects = await this._database.getRelations([this.id], "out", aType, aObjectType);
-        if(objects.length) {
-            {
-                let currentArray = objects;
-                let currentArrayLength = currentArray.length;
-                for(let i = 0; i < currentArrayLength; i++) {
-                    let relatedObject = currentArray[i];
-                    if(ids.indexOf(relatedObject.id) >= 0 && relatedObject.endAt === aEndAt) {
-                        exisitngIds.push(relatedObject.id);
-                    }
-                    else {
-                        removedIds.push(relatedObject.id);
-                        await this._database.endRelation(relatedObject.relationId);
-                    }
-                }
-            }
-        }
-
-        {
-            idsToAdd = Dbm.utils.ArrayFunctions.getUnselectedItems(exisitngIds, ids);
-
-            let currentArray = idsToAdd;
-            let currentArrayLength = currentArray.length;
-            for(let i = 0; i < currentArrayLength; i++) {
-                let relationId = await this.addOutgoingRelation(currentArray[i], aType, "NOW()", aEndAt);
-            }
-        }
-
-        return {"added": idsToAdd, "exisitng": exisitngIds, "removed": removedIds};
+        console.warn("Use outgoingRelations.replaceMultiple instead of replaceMultipleOutgoingRelations");
+        return await this.outgoingRelations.replaceMultiple(aIdsOrPosts, aType, aObjectType, aEndAt);
     }
 
-    async removeIncomingRelationTo(aIdOrPost, aType) {
-        let id = this._idFromPostOrId(aIdOrPost);
-
-        let objects = await this._database.getRelations([this.id], "in", aType, "*");
-        if(objects.length) {
-            let currentArray = objects;
-            let currentArrayLength = currentArray.length;
-            for(let i = 0; i < currentArrayLength; i++) {
-                let relatedObject = currentArray[i];
-                if(relatedObject.id === id) {
-                    await this._database.endRelation(relatedObject.relationId);
-                }
-            }
-        }
+    async removeIncomingRelationTo(aIdOrItem, aType) {
+        console.warn("Use incomingRelations.removeRelationTo instead of removeIncomingRelationTo");
+        return await this.incomingRelations.removeRelationTo(aIdOrItem, aType);
     }
 
-    async removeOutgoingRelationTo(aIdOrPost, aType) {
-        let id = this._idFromPostOrId(aIdOrPost);
-
-        let objects = await this._database.getRelations([this.id], "out", aType, "*");
-        if(objects.length) {
-            let currentArray = objects;
-            let currentArrayLength = currentArray.length;
-            for(let i = 0; i < currentArrayLength; i++) {
-                let relatedObject = currentArray[i];
-                if(relatedObject.id === id) {
-                    await this._database.endRelation(relatedObject.relationId);
-                }
-            }
-        }
+    async removeOutgoingRelationTo(aIdOrItem, aType) {
+        console.warn("Use outgoingRelations.removeRelationTo instead of removeOutgoingRelationTo");
+        return await this.outgoingRelations.removeRelationTo(aIdOrItem, aType);
     }
 
     async setUrl(aUrl) {
@@ -315,31 +170,6 @@ export default class DatabaseObject {
         await this._database.removeObjectType(this.id, aType);
     }
 
-    _idFromPostOrId(aIdOrPost) {
-        if(aIdOrPost instanceof DatabaseObject) {
-            return aIdOrPost.id;
-        }
-
-        let numericId = 1*aIdOrPost;
-        if(aIdOrPost && !isNaN(1*numericId)) {
-            return numericId
-        }
-
-        return 0;
-    }
-
-    _idsFromPostsOrIds(aIdsOrPosts) {
-        
-        let currentArray = aIdsOrPosts;
-        let currentArrayLength = currentArray.length;
-        let ids = new Array(currentArrayLength);
-        for(let i = 0; i < currentArrayLength; i++) {
-            ids[i] = this._idFromPostOrId(currentArray[i]);
-        }
-
-        return ids;
-    }
-
     async getSingleLinkedType(aType) {
         let type = await this.singleObjectRelationQuery("in:for:" + aType);
         if(type) {
@@ -352,7 +182,7 @@ export default class DatabaseObject {
 
     async addLinkedType(aObjectType, aIdentifier) {
         let objectType = await this._database.getTypeObject(aObjectType, aIdentifier);
-        await this.addIncomingRelation(objectType, "for");
+        await this.incomingRelations.add(objectType, "for");
 
         return this;
     }
