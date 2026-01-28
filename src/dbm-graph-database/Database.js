@@ -296,6 +296,24 @@ export default class Database extends Dbm.core.BaseObject {
         return null;
     }
 
+    async getObjectsByField(aObjectType, aFieldName, aValue) {
+        let objectTypeId = await this.getObjectType(aObjectType);
+
+        let query = "SELECT Objects.id as id FROM Objects INNER JOIN Fields ON Objects.id = Fields.object INNER JOIN ObjectTypesLink ON Objects.id = ObjectTypesLink.id WHERE ObjectTypesLink.type = " + objectTypeId + " AND Fields.name = " + this.connection.escape(aFieldName) + " AND Fields.value = " + this.connection.escape(JSON.stringify(aValue));
+
+		let result = await this.connection.query(query);
+		
+        let currentArray = result[0];
+        let currentArrayLength = currentArray.length;
+
+        let returnArray = new Array(currentArrayLength);
+        for(let i = 0; i < currentArrayLength; i++) {
+            returnArray[i] = this.getObject(currentArray[i].id);
+        }
+		
+		return returnArray;
+    }
+
     getObject(aId) {
         let newObject = new DatabaseObject();
         newObject.setup(this, aId);
