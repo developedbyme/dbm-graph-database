@@ -403,6 +403,17 @@ export default class Database extends Dbm.core.BaseObject {
         
     }
 
+    async updateObjectIdentifier(aId, aIdentifier) {
+        let query = "DELETE FROM Identifiers WHERE object = " + aId;
+
+        //console.log(query);
+        let result = await this.connection.query(query);
+
+        await this.setObjectIdentifier(aId, aIdentifier);
+
+        return null;
+    }
+
     async getRelations(aFromIds, aDirection, aType, aObjectType = "*", aTime = "NOW()") {
         if(!aFromIds.length) {
             return [];
