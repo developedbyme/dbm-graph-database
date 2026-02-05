@@ -5,6 +5,8 @@ export default class DatabaseObject {
     constructor() {
         this._id = 0;
 
+        this._cache = {};
+
         this.incomingRelations = DbmGraphDatabase.RelationsDirection.createIncoming(this);
         this.outgoingRelations = DbmGraphDatabase.RelationsDirection.createOutgoing(this);
 
@@ -34,12 +36,59 @@ export default class DatabaseObject {
         await this._database.updateObjectIdentifier(this.id, aIdentifier);
     }
 
+    get fields() {
+        return this._cache["fields"];
+    }
+
+    getTranslatedFieldValue(aFieldName, aLanguageCode) {
+
+        let translatedValue = Dbm.objectPath(this._cache["fieldsTranslation/" + aFieldName], aLanguageCode);
+        if(translatedValue) {
+            return translatedValue;
+        }
+
+        return this.fields[aFieldName];
+    }
+
+    async loadFields() {
+        if(!this._cache["fields"]) {
+            this._cache["fields"] = await this._database.getFields(this.id);
+        }
+
+        return this._cache["fields"];
+    }
+
     async getFields() {
-        return await this._database.getFields(this.id);
+        await this.loadFields();
+
+        return this.fields;
+    }
+
+    async loadSingleFieldTranslation(aFieldName) {
+        let cacheName = "fieldsTranslation/" + aFieldName;
+        if(!this._cache[cacheName]) {
+            this._cache[cacheName] = await this._database.getFieldTranslation(this.id, aFieldName);
+        }
+
+        return this._cache[cacheName];
+    }
+
+    async loadFieldTranslations(...aFieldNames) {
+
+        let promises = [];
+
+        let currentArray = aFieldNames;
+        let currentArrayLength = currentArray.length;
+        for(let i = 0; i < currentArrayLength; i++) {
+            promises.push(this.loadSingleFieldTranslation(currentArray[i]));
+        }
+
+        await Promise.all(promises);
     }
 
     async getFieldTranslation(aFieldName) {
-        return await this._database.getFieldTranslation(this.id, aFieldName);
+        let translation = await this.loadSingleFieldTranslation(aFieldName);
+        return translation;
     }
 
     async getAllFieldTranslations() {
