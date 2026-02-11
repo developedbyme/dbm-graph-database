@@ -243,4 +243,16 @@ export default class User extends DatabaseObject {
 
         return false;
     }
+
+    getRoles() {
+        return this.objectRelationQuery("in:for:type/userRole");
+    }
+
+    async hasRole(aIdentifier) {
+        let role = await this.singleObjectRelationQueryWithIdentifierFilter("in:for:type/userRole", aIdentifier);
+        if(role) {
+            return true;
+        }
+        return false;
+    }
 }
