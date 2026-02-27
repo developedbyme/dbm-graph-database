@@ -247,6 +247,19 @@ export default class DatabaseObject {
         return result.changed;
     }
 
+    async addActionTrigger(aIdentifier) {
+
+        let exisitingTrigger = await this.singleObjectRelationQueryWithIdentifierFilter("in:for:actionTrigger", aIdentifier);
+        if(!exisitingTrigger) {
+            await this.addLinkedType("actionTrigger", aIdentifier);
+            await this._database.addActionToProcess("handleTrigger/" + aIdentifier, this);
+
+            return true;
+        }
+
+        return false;
+    }
+
     async trash() {
         await this._database.trashItem(this.id);
     }
