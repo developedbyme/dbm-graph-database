@@ -314,6 +314,18 @@ export default class Database extends Dbm.core.BaseObject {
 		return returnArray;
     }
 
+    async getObjectCreationDate(aObjectId) {
+        let query = "SELECT Objects.date as date FROM Objects WHERE id = " + this.connection.escape(aObjectId) + " LIMIT 1";
+        
+        let result = await this.connection.query(query);
+
+        if(result[0].length) {
+            return result[0][0].date;
+        }
+
+        return null;
+    }
+
     getObject(aId) {
         let newObject = new DatabaseObject();
         newObject.setup(this, aId);

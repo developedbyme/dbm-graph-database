@@ -36,6 +36,10 @@ export default class DatabaseObject {
         await this._database.updateObjectIdentifier(this.id, aIdentifier);
     }
 
+    async getCreationDate() {
+        return await this._database.getObjectCreationDate(this.id);
+    }
+
     get fields() {
         return this._cache["fields"];
     }
