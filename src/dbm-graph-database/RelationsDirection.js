@@ -115,7 +115,9 @@ export default class RelationsDirection {
 
         let result = new Dbm.utils.ArrayOperationResult();
 
-        let ids = this._idsFromPostsOrIds(aIdsOrPosts);
+        let addedIds = [];
+
+        let ids = Dbm.utils.ArrayFunctions.removeDuplicates(this._idsFromPostsOrIds(aIdsOrPosts));
         let objects = await this._owner._database.getRelations([this._owner.id], this._direction, aType, aObjectType);
         if(objects.length) {
             {
@@ -123,8 +125,9 @@ export default class RelationsDirection {
                 let currentArrayLength = currentArray.length;
                 for(let i = 0; i < currentArrayLength; i++) {
                     let relatedObject = currentArray[i];
-                    if(ids.indexOf(relatedObject.id) >= 0 && relatedObject.endAt === aEndAt) {
+                    if(ids.indexOf(relatedObject.id) >= 0 && relatedObject.endAt === aEndAt && addedIds.indexOf(relatedObject.id) === -1) {
                         result.noChange.push(relatedObject.relationId);
+                        addedIds.push(relatedObject.id);
                     }
                     else {
                         result.removed.push(relatedObject.relationId);
@@ -135,7 +138,7 @@ export default class RelationsDirection {
         }
 
         {
-            let currentArray = Dbm.utils.ArrayFunctions.getUnselectedItems(result.noChange, ids);
+            let currentArray = Dbm.utils.ArrayFunctions.removeValues(ids, addedIds);
             let currentArrayLength = currentArray.length;
             for(let i = 0; i < currentArrayLength; i++) {
                 let relationId = await this.add(currentArray[i], aType, "NOW()", aEndAt);
