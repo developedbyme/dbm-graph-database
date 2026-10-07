@@ -147,6 +147,14 @@ export default class DatabaseObject {
         return this;
     }
 
+    async updateFieldIfSet(aName, aValue) {
+        if(aValue !== null && aValue !== undefined) {
+            return this.updateField(aName, aValue);
+        }
+
+        return this;
+    }
+
     async updateFieldTranslation(aName, aLanguage, aValue) {
         await this._database.updateFieldTranslation(this.id, aName, aLanguage, aValue);
 
